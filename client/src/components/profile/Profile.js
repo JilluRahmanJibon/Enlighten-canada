@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import { AiTwotoneEdit } from "react-icons/ai";
+import { useSelector } from "react-redux";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("About me");
-
   // Menu items array
   const menuItems = [
     { label: "About me" },
@@ -18,7 +18,9 @@ const Profile = () => {
   ];
 
 
-  const Visitors = () => {
+  const Visitors = () =>
+  {
+    
     return (
       <div >
         <h3 className="font-semibold text-lg mb-4">Visitors</h3>
@@ -237,7 +239,12 @@ const Profile = () => {
     </div>
   );
 
-  const renderTabContent = () => {
+  const renderTabContent = () =>
+  {
+    const {loading,currentUser} = useSelector((state) => state.user);
+    console.log("🚀 ~ Profile ~ currentUser:", currentUser)
+
+    
     switch (activeTab) {
       case "About me":
         return (
@@ -265,7 +272,7 @@ const Profile = () => {
                   <label className="block text-2xl font-semibold text-[#222]">
                     Name
                   </label>
-                  <p className="text-gray-700">Sevil</p>
+                  <p className="text-gray-700"> {currentUser?.username}</p>
                 </div>
                 <button className="text-blue-500 hover:underline flex items-center gap-2 ml-4">
                   <AiTwotoneEdit size={20} />

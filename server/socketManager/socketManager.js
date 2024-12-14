@@ -5,7 +5,7 @@ module.exports = {
     if (!io) {
       io = ioInstance;
       io.on("connection", async (socket) => {
-        console.log("Client connected", socket.id);
+        // console.log("Client connected", socket.id);
         socket.on("callUser", (data) => {
           io.to(data.receiver).emit("callUser", {
             signal: data.signal,

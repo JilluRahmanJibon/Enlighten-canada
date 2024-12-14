@@ -7,34 +7,41 @@ const languages = [
   { icon: "/spain.svg", show: "Spanish", value: "es" },
 ];
 
-const LanguageSelector = () => {
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[2]); // Default set to Spanish
-  const [isOpen, setIsOpen] = useState(false);
+const LanguageSelector = () =>
+{
+  const [ selectedLanguage, setSelectedLanguage ] = useState(languages[ 2 ]); // Default set to Spanish
+  const [ isOpen, setIsOpen ] = useState(false);
   const dropdownRef = useRef(null);
 
   // Toggle dropdown when the button is clicked
-  const toggleDropdown = () => {
+  const toggleDropdown = () =>
+  {
     setIsOpen(!isOpen);
   };
 
   // Close dropdown if clicked outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+  useEffect(() =>
+  {
+    const handleClickOutside = (event) =>
+    {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target))
+      {
         setIsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
+    return () =>
+    {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [dropdownRef]);
+  }, [ dropdownRef ]);
 
   // Function to handle language change
-  const handleLanguageChange = (lang) => {
+  const handleLanguageChange = (lang) =>
+  {
     setSelectedLanguage(lang);
     setIsOpen(false);
-    console.log(`Language changed to: ${lang.show} (${lang.value})`);  // Logs to console
+    console.log(`Language changed to: ${ lang.show } (${ lang.value })`);  // Logs to console
   };
 
   return (

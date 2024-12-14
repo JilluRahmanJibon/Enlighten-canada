@@ -7,9 +7,11 @@ const {
 
 exports.getChatUserList = async (req, res) => {
   const { userId } = req.params;
+ 
 
   try {
     const users = await getChatUserListForUser(userId); // Await the result of the promise
+
     res.json(users);
   } catch (err) {
     console.error("Error fetching chat user list:", err); // Log the detailed error

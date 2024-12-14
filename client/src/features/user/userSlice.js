@@ -12,11 +12,14 @@ const API_URL = "http://localhost:8080/api/users"; // Replace with your actual A
 // Register a new user
 export const registerUser = createAsyncThunk(
   "user/registerUser",
-  async (userData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${API_URL}/register`, userData);
+  async (userData, { rejectWithValue }) =>
+  {
+    try
+    {
+      const response = await axios.post(`${ API_URL }/register`, userData);
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       return rejectWithValue(error.response.data);
     }
   }
@@ -25,11 +28,14 @@ export const registerUser = createAsyncThunk(
 // Login user
 export const loginUser = createAsyncThunk(
   "user/loginUser",
-  async (userData, { rejectWithValue }) => {
-    try {
+  async (userData, { rejectWithValue }) =>
+  {
+    try
+    {
       const response = await axiosInstance.post("/users/login", userData);
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       return rejectWithValue(error.response.data);
     }
   }
@@ -38,11 +44,14 @@ export const loginUser = createAsyncThunk(
 // Fetch logged-in user's details
 export const fetchLoggedInUser = createAsyncThunk(
   "user/fetchLoggedInUser",
-  async (_, { rejectWithValue }) => {
-    try {
+  async (_, { rejectWithValue }) =>
+  {
+    try
+    {
       const response = await axiosInstance.get("/users/verify/me"); // Replace with your actual endpoint for fetching the current user's details
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       return rejectWithValue(error.response.data);
     }
   }
@@ -51,24 +60,33 @@ export const fetchLoggedInUser = createAsyncThunk(
 // Get all users
 export const getAllUsers = createAsyncThunk(
   "user/getAllUsers",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${API_URL}`);
+  async (_, { rejectWithValue }) =>
+  {
+    try
+    {
+      const response = await axios.get(`${ API_URL }`);
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
+      console.error("Error fetching users: ", error.response.data);  // Log error response
       return rejectWithValue(error.response.data);
     }
   }
 );
 
+
 // Get user by ID
 export const getUserById = createAsyncThunk(
   "user/getUserById",
-  async (userId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${API_URL}/${userId}`);
+  async (userId, { rejectWithValue }) =>
+  {
+    try
+    {
+      const response = await axios.get(`${ API_URL }/${ userId }`);
+      console.log("🚀 ~ response:", response.data)
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       return rejectWithValue(error.response.data);
     }
   }
@@ -77,11 +95,14 @@ export const getUserById = createAsyncThunk(
 // Update user
 export const updateUser = createAsyncThunk(
   "user/updateUser",
-  async ({ userId, userData }, { rejectWithValue }) => {
-    try {
-      const response = await axios.put(`${API_URL}/update/${userId}`, userData);
+  async ({ userId, userData }, { rejectWithValue }) =>
+  {
+    try
+    {
+      const response = await axios.put(`${ API_URL }/update/${ userId }`, userData);
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       return rejectWithValue(error.response.data);
     }
   }
@@ -90,13 +111,16 @@ export const updateUser = createAsyncThunk(
 // Request password reset
 export const requestPasswordReset = createAsyncThunk(
   "user/requestPasswordReset",
-  async (email, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${API_URL}/request-password-reset`, {
+  async (email, { rejectWithValue }) =>
+  {
+    try
+    {
+      const response = await axios.post(`${ API_URL }/request-password-reset`, {
         email,
       });
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       return rejectWithValue(error.response.data);
     }
   }
@@ -105,14 +129,17 @@ export const requestPasswordReset = createAsyncThunk(
 // Reset password
 export const resetPassword = createAsyncThunk(
   "user/resetPassword",
-  async ({ resetToken, newPassword }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${API_URL}/reset-password`, {
+  async ({ resetToken, newPassword }, { rejectWithValue }) =>
+  {
+    try
+    {
+      const response = await axios.post(`${ API_URL }/reset-password`, {
         resetToken,
         newPassword,
       });
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       return rejectWithValue(error.response.data);
     }
   }
@@ -122,115 +149,146 @@ export const resetPassword = createAsyncThunk(
 const userSlice = createSlice({
   name: "user",
   initialState: {
-    users: [],
-    currentUser: null,
+    users: [],          // All users
+    currentUser: null,  // The logged-in user
+    onlineUsers: [],    // List of online users
     loading: false,
     error: null,
   },
   reducers: {
-    // Logout reducer to clear the user state and remove token from cookies
-    logout: (state) => {
+    logout: (state) =>
+    {
       state.currentUser = null;
       Cookies.remove('token'); // Remove JWT token from cookies
       state.error = null;
       state.loading = false;
     },
+    setOnlineUsers: (state, action) =>
+    {
+      state.onlineUsers = action.payload; // List of users currently online
+    },
   },
-  extraReducers: (builder) => {
+
+  extraReducers: (builder) =>
+  {
     builder
-      .addCase(fetchLoggedInUser.pending, (state) => {
+      .addCase(fetchLoggedInUser.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchLoggedInUser.fulfilled, (state, action) => {
+      .addCase(fetchLoggedInUser.fulfilled, (state, action) =>
+      {
         state.loading = false;
         state.currentUser = action.payload;
       })
-      .addCase(fetchLoggedInUser.rejected, (state, action) => {
+      .addCase(fetchLoggedInUser.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(registerUser.pending, (state) => {
+      .addCase(registerUser.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state, action) =>
+      {
         state.loading = false;
         state.users.push(action.payload);
       })
-      .addCase(registerUser.rejected, (state, action) => {
+      .addCase(registerUser.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(loginUser.pending, (state) => {
+      .addCase(loginUser.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(loginUser.fulfilled, (state, action) =>
+      {
         state.loading = false;
         state.currentUser = action.payload.user;
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(loginUser.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(getAllUsers.pending, (state) => {
+      .addCase(getAllUsers.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getAllUsers.fulfilled, (state, action) => {
+      .addCase(getAllUsers.fulfilled, (state, action) =>
+      {
         state.loading = false;
         state.users = action.payload;
       })
-      .addCase(getAllUsers.rejected, (state, action) => {
+      .addCase(getAllUsers.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(getUserById.pending, (state) => {
+      .addCase(getUserById.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getUserById.fulfilled, (state, action) => {
+      .addCase(getUserById.fulfilled, (state, action) =>
+      {
         state.loading = false;
         state.currentUser = action.payload;
       })
-      .addCase(getUserById.rejected, (state, action) => {
+      .addCase(getUserById.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(updateUser.pending, (state) => {
+      .addCase(updateUser.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateUser.fulfilled, (state, action) => {
+      .addCase(updateUser.fulfilled, (state, action) =>
+      {
         state.loading = false;
         state.currentUser = action.payload;
       })
-      .addCase(updateUser.rejected, (state, action) => {
+      .addCase(updateUser.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(requestPasswordReset.pending, (state) => {
+      .addCase(requestPasswordReset.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(requestPasswordReset.fulfilled, (state) => {
+      .addCase(requestPasswordReset.fulfilled, (state) =>
+      {
         state.loading = false;
         // Handle password reset success
       })
-      .addCase(requestPasswordReset.rejected, (state, action) => {
+      .addCase(requestPasswordReset.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(resetPassword.pending, (state) => {
+      .addCase(resetPassword.pending, (state) =>
+      {
         state.loading = true;
         state.error = null;
       })
-      .addCase(resetPassword.fulfilled, (state) => {
+      .addCase(resetPassword.fulfilled, (state) =>
+      {
         state.loading = false;
         // Handle reset password success
       })
-      .addCase(resetPassword.rejected, (state, action) => {
+      .addCase(resetPassword.rejected, (state, action) =>
+      {
         state.loading = false;
         state.error = action.payload;
       });

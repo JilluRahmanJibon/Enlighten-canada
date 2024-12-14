@@ -1,9 +1,14 @@
-import ProfileDetails from '@/components/profile/ProfileDetails'
-import React from 'react'
+"use client";
 
-const page = () => {
+
+import ProfileDetails from '@/components/profile/ProfileDetails'
+import { useParams } from 'next/navigation';
+import React from 'react'
+const page = () =>
+{
+  const { id } = useParams();
   return (
-    <div><ProfileDetails/></div>
+    <div><ProfileDetails userId={id} /></div>
   )
 }
 
