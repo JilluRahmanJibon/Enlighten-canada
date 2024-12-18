@@ -6,27 +6,31 @@ import BlogForm from "./blog/BlogForm";
 import toast from "react-hot-toast";
 // import BlogList from './BlogList';
 // import BlogForm from './BlogForm';
-
-const Blog = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [editingBlog, setEditingBlog] = useState(null);
-  const [isLoader, setLoader] = useState(1)
+import { API_URL } from "@/utils/BaseUrl";
+const Blog = () =>
+{
+  const [ showForm, setShowForm ] = useState(false);
+  const [ editingBlog, setEditingBlog ] = useState(null);
+  const [ isLoader, setLoader ] = useState(1)
 
   // Function to handle blog creation or update
-  const handleFormSubmit = async (data) => {
+  const handleFormSubmit = async (data) =>
+  {
     const method = editingBlog ? "PUT" : "POST";
     const url = editingBlog
-      ? `http://localhost:8080/api/blogs/${editingBlog.id}`
-      : "http://localhost:8080/api/blogs";
+      ? `${ API_URL }/blogs/${ editingBlog.id }`
+      : `${ API_URL }/blogs`;
 
-    try {
+    try
+    {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       // Check if the response is successful
-      if (!res.ok) {
+      if (!res.ok)
+      {
         const errorData = await res.json();
         throw new Error(errorData.message || "Something went wrong");
       }
@@ -37,25 +41,30 @@ const Blog = () => {
 
       console.log(responseData); // Log the parsed response
 
-      if (responseData) {
+      if (responseData)
+      {
         toast.success(responseData.message || "Operation successful");
       }
       setLoader(isLoader + 1)
       // You can trigger blog list refresh here
-    } catch (error) {
+    } catch (error)
+    {
       console.error("Error saving blog:", error);
     }
   };
 
   // Function to delete a blog
-  const handleDeleteBlog = async (id) => {
-    try {
-      await fetch(`http://localhost:8080/api/blogs/${id}`, {
+  const handleDeleteBlog = async (id) =>
+  {
+    try
+    {
+      await fetch(`${API_URL}/blogs/${ id }`, {
         method: "DELETE",
       });
       // You can trigger blog list refresh here
       setLoader(isLoader + 1)
-    } catch (error) {
+    } catch (error)
+    {
       console.error("Error deleting blog:", error);
     }
   };
@@ -66,7 +75,8 @@ const Blog = () => {
 
       {/* Blog List */}
       <BlogList
-        onEdit={(blog) => {
+        onEdit={(blog) =>
+        {
           setShowForm(true);
           setEditingBlog(blog);
         }}
@@ -87,7 +97,8 @@ const Blog = () => {
       {/* Button to show create blog form */}
       {!showForm && (
         <button
-          onClick={() => {
+          onClick={() =>
+          {
             setShowForm(true);
             setEditingBlog(null); // Reset form to create new blog
           }}

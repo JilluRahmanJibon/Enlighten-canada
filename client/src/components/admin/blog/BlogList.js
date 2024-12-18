@@ -2,53 +2,65 @@
 
 import React, { useState, useEffect } from 'react';
 import ConfirmDialog from './ConfirmDialog';
+import { API_URL } from '@/utils/BaseUrl';
 
-const BlogList = ({ onEdit, onDelete, isLoader }) => {
-  const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
+const BlogList = ({ onEdit, onDelete, isLoader }) =>
+{
+  const [ blogs, setBlogs ] = useState([]);
+  const [ loading, setLoading ] = useState(false);
+  const [ currentPage, setCurrentPage ] = useState(1);
+  const [ totalPages, setTotalPages ] = useState(1);
+  const [ confirmDialog, setConfirmDialog ] = useState({ isOpen: false, id: null });
 
   const blogsPerPage = 10;
 
   // Fetch blogs with pagination
-  const fetchBlogs = async (page) => {
+  const fetchBlogs = async (page) =>
+  {
     setLoading(true);
-    try {
-      const response = await fetch(`http://localhost:8080/api/blogs?page=${page}&limit=${blogsPerPage}`);
+    try
+    {
+      const response = await fetch(`${API_URL}/blogs?page=${ page }&limit=${ blogsPerPage }`);
       const data = await response.json();
       setBlogs(data.blogs);
       console.log(data.blogs)
       setTotalPages(data.totalPages); // Assuming API returns total pages
-    } catch (error) {
+    } catch (error)
+    {
       console.error('Error fetching blogs:', error);
-    } finally {
+    } finally
+    {
       setLoading(false);
     }
   };
 
   console.log(blogs)
 
-  useEffect(() => {
+  useEffect(() =>
+  {
     const blogs = fetchBlogs(currentPage);
     console.log("blogs", blogs)
-  }, [currentPage, isLoader]);
+  }, [ currentPage, isLoader ]);
 
   // Handle pagination
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
+  const handleNextPage = () =>
+  {
+    if (currentPage < totalPages)
+    {
       setCurrentPage((prev) => prev + 1);
     }
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
+  const handlePreviousPage = () =>
+  {
+    if (currentPage > 1)
+    {
       setCurrentPage((prev) => prev - 1);
     }
   };
 
-  const openConfirmDialog = (id) => {
+  const openConfirmDialog = (id) =>
+  {
     setConfirmDialog({ isOpen: true, id });
   };
 
@@ -93,7 +105,7 @@ const BlogList = ({ onEdit, onDelete, isLoader }) => {
         >
           Previous
         </button>
-        <span>{`Page ${currentPage} of ${totalPages}`}</span>
+        <span>{`Page ${ currentPage } of ${ totalPages }`}</span>
         <button
           onClick={handleNextPage}
           disabled={currentPage === totalPages}

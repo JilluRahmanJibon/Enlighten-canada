@@ -1,11 +1,11 @@
 // src/features/user/userSlice.js
 import axiosInstance from "@/config/axiosConfig";
+import { API_URL } from "@/utils/BaseUrl";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import Cookies from 'js-cookie'; // Import js-cookie for handling cookies
 
 // Define API URL
-const API_URL = "http://localhost:8080/api/users"; // Replace with your actual API base URL
 
 // Async thunks for API calls
 
@@ -16,7 +16,7 @@ export const registerUser = createAsyncThunk(
   {
     try
     {
-      const response = await axios.post(`${ API_URL }/register`, userData);
+      const response = await axios.post(`${ API_URL }/users/register`, userData);
       return response.data;
     } catch (error)
     {
@@ -32,7 +32,7 @@ export const loginUser = createAsyncThunk(
   {
     try
     {
-      const response = await axiosInstance.post("/users/login", userData);
+      const response = await axiosInstance.post(`${ API_URL}/users/login`, userData);
       return response.data;
     } catch (error)
     {
@@ -48,7 +48,7 @@ export const fetchLoggedInUser = createAsyncThunk(
   {
     try
     {
-      const response = await axiosInstance.get("/users/verify/me"); // Replace with your actual endpoint for fetching the current user's details
+      const response = await axiosInstance.get(`${ API_URL}/users/verify/me`); // Replace with your actual endpoint for fetching the current user's details
       return response.data;
     } catch (error)
     {
@@ -64,11 +64,11 @@ export const getAllUsers = createAsyncThunk(
   {
     try
     {
-      const response = await axios.get(`${ API_URL }`);
+      const response = await axios.get(`${ API_URL }/users`);
       return response.data;
     } catch (error)
     {
-      console.error("Error fetching users: ", error.response.data);  // Log error response
+      console.log("Error fetching users: ", error.response.data);  // Log error response
       return rejectWithValue(error.response.data);
     }
   }
@@ -82,8 +82,8 @@ export const getUserById = createAsyncThunk(
   {
     try
     {
-      const response = await axios.get(`${ API_URL }/${ userId }`);
-      console.log("🚀 ~ response:", response.data)
+      const response = await axios.get(`${ API_URL }/users/${ userId }`);
+
       return response.data;
     } catch (error)
     {
@@ -150,7 +150,8 @@ const userSlice = createSlice({
   name: "user",
   initialState: {
     users: [],          // All users
-    currentUser: null,  // The logged-in user
+    currentUser: null, // The logged-in user
+    selectedUser: null,
     onlineUsers: [],    // List of online users
     loading: false,
     error: null,
@@ -240,7 +241,7 @@ const userSlice = createSlice({
       .addCase(getUserById.fulfilled, (state, action) =>
       {
         state.loading = false;
-        state.currentUser = action.payload;
+        state.selectedUser = action.payload;
       })
       .addCase(getUserById.rejected, (state, action) =>
       {

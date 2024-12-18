@@ -2,36 +2,43 @@
 // BlogSection.js
 import React, { useEffect, useState } from 'react';
 import BlogCard from './BlogCard';
+import { API_URL } from '@/utils/BaseUrl';
 
-const BlogSection = () => {
-  const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [limit, setLimit] = useState(10); // Initial limit to load 10 blogs at a time
+const BlogSection = () =>
+{
+  const [ blogs, setBlogs ] = useState([]);
+  const [ loading, setLoading ] = useState(false);
+  const [ currentPage, setCurrentPage ] = useState(1);
+  const [ totalPages, setTotalPages ] = useState(1);
+  const [ limit, setLimit ] = useState(10); // Initial limit to load 10 blogs at a time
 
   // Function to fetch blogs
-  const fetchBlogs = async (page = 1) => {
+  const fetchBlogs = async (page = 1) =>
+  {
     setLoading(true);
-    try {
-      const response = await fetch(`http://localhost:8080/api/blogs?page=${page}&limit=${limit}`);
+    try
+    {
+      const response = await fetch(`${ API_URL }/blogs?page=${ page }&limit=${ limit }`);
       const data = await response.json();
-      setBlogs((prevBlogs) => [...prevBlogs, ...data.blogs]); // Append new blogs to the existing list
+      setBlogs((prevBlogs) => [ ...prevBlogs, ...data.blogs ]); // Append new blogs to the existing list
       setTotalPages(data.totalPages); // Assuming API returns total pages or similar data
       setLoading(false);
-    } catch (error) {
+    } catch (error)
+    {
       console.error('Error fetching blogs:', error);
       setLoading(false);
     }
   };
 
   // Fetch blogs when the component mounts and on subsequent "See More" clicks
-  useEffect(() => {
+  useEffect(() =>
+  {
     fetchBlogs(currentPage);
-  }, [currentPage]);
+  }, [ currentPage ]);
 
   // Function to handle the "See More" button click
-  const handleSeeMore = () => {
+  const handleSeeMore = () =>
+  {
     setCurrentPage(currentPage + 1); // Load the next set of blogs
   };
 

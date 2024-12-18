@@ -11,27 +11,34 @@ import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '@/features/user/userSlice';
 
-const Login = () => {
+const Login = () =>
+{
   const { handleSubmit, control, formState: { errors }, reset } = useForm();
   const router = useRouter();
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.user);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data) =>
+  {
     dispatch(loginUser(data))
       .unwrap()
-      .then((response) => {
-        if (response.user) {
+      .then((response) =>
+      {
+        if (response.user)
+        {
+
           // Save the token in cookies
           Cookies.set('token', response.token, { expires: 1, sameSite: 'strict' });
           toast.success('Login successful');
           reset();
           router.push('/');
-        } else {
+        } else
+        {
           toast.error('Login failed!');
         }
       })
-      .catch((err) => {
+      .catch((err) =>
+      {
         toast.error('Login failed');
         console.error('Login error:', err);
       });
@@ -131,9 +138,8 @@ const Login = () => {
                 {...field}
                 type="email"
                 placeholder="Your email"
-                className={`w-full border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg p-3 focus:outline-none focus:border-blue-500`}
+                className={`w-full border ${ errors.email ? 'border-red-500' : 'border-gray-300'
+                  } rounded-lg p-3 focus:outline-none focus:border-blue-500`}
               />
             )}
           />
@@ -158,9 +164,8 @@ const Login = () => {
                 {...field}
                 type="password"
                 placeholder="Your password"
-                className={`w-full border ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg p-3 focus:outline-none focus:border-blue-500`}
+                className={`w-full border ${ errors.password ? 'border-red-500' : 'border-gray-300'
+                  } rounded-lg p-3 focus:outline-none focus:border-blue-500`}
               />
             )}
           />

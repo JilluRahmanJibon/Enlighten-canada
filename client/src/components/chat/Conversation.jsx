@@ -12,15 +12,22 @@ import MessageInput from "./MessageInput";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchConversationHistory } from "@/features/user/chatSlice";
 import Image from "next/image";
+import { SOCKET_API_URL } from "@/utils/BaseUrl";
 
-const socket = io("http://localhost:8080"); // Adjust to your server URL
+let socket = io(`${SOCKET_API_URL}`, {
+	path: "/api/socket.io",
+	autoConnect: true,
+}); // Adjust to your server URL
 
 const Conversation = () => {
 	const dispatch = useDispatch();
-	const { conversation, selectedUser } = useSelector(state => state.chat);
+	const { conversation, selectedUser, users } = useSelector(
+		state => state.chat
+	);
 	const { currentUser } = useSelector(state => state.user);
 	const [messages, setMessages] = useState([]);
 	const [isCalling, setIsCalling] = useState(false);
+	console.log("🚀 ~ Conversation ~ isCalling:", isCalling);
 	const [isMuted, setIsMuted] = useState(false);
 	const [isVideoCall, setIsVideoCall] = useState(false);
 	const [isCameraOn, setIsCameraOn] = useState(true); // State to manage camera
@@ -30,9 +37,9 @@ const Conversation = () => {
 	const remoteStreamRef = useRef(null);
 	const peerRef = useRef(null);
 	const chatContainerRef = useRef(null);
-
 	useEffect(() => {
 		if (currentUser?.id && selectedUser?.id) {
+			// Dispatch fetch for conversation history
 			dispatch(
 				fetchConversationHistory({
 					userId1: currentUser.id,
@@ -40,19 +47,29 @@ const Conversation = () => {
 				})
 			);
 
+			// Create a room for socket communication
 			const room = [currentUser.id, selectedUser.id].sort().join("-");
+
+			// Join the room
 			socket.emit("joinRoom", room, () => console.log(`Joined room: ${room}`));
 
-			socket.on("receiveMessage", handleIncomingMessage);
-			socket.on("callUser", handleIncomingCall);
+			// Set up socket listeners
+			const handleReceiveMessage = message => {
+				handleIncomingMessage(message);
+			};
+
+			socket.on("receiveMessage", handleReceiveMessage);
+			socket.on("incomingCall", handleIncomingCall);
+			// socket.on("callUser", handleIncomingCall);
 			socket.on("callAccepted", handleCallAccepted);
 			socket.on("iceCandidate", handleIceCandidate);
 
+			// Clean up the socket listeners on unmount or changes
 			return () => {
-				socket.off("receiveMessage", handleIncomingMessage);
-				socket.off("callUser");
-				socket.off("callAccepted");
-				socket.off("iceCandidate");
+				socket.off("receiveMessage", handleReceiveMessage);
+				socket.off("incomingCall", handleIncomingCall);
+				socket.off("callAccepted", handleCallAccepted);
+				socket.off("iceCandidate", handleIceCandidate);
 			};
 		}
 	}, [currentUser?.id, selectedUser?.id, dispatch]);
@@ -65,30 +82,43 @@ const Conversation = () => {
 	}, [conversation]);
 
 	const handleIncomingMessage = newMessage => {
-		setMessages(prevMessages => [...prevMessages, newMessage]);
+		// Check if the new message is already in the state
+		setMessages(prevMessages => {
+			// Check for duplicates based on content and timestamp
+			const isDuplicate = prevMessages.some(
+				message =>
+					message.timestamp === newMessage.timestamp ||
+					message.content === newMessage.content
+			);
+
+			if (!isDuplicate) {
+				return [...prevMessages, newMessage]; // Add message only if it's not a duplicate
+			}
+
+			return prevMessages;
+		});
+
 		scrollToBottom();
 	};
 
 	const handleIncomingCall = async data => {
 		setIsCalling(true);
-		setCountdown(2); // Set countdown to 2 seconds
-		setShowCountdown(false); // Initially show "Calling..."
+		setCountdown(2);
+		setShowCountdown(false);
 
-		// Start the countdown after 2 seconds
 		setTimeout(() => {
-			setShowCountdown(true); // Show countdown after 2 seconds
+			setShowCountdown(true);
 			const countdownInterval = setInterval(() => {
 				setCountdown(prev => (prev > 0 ? prev - 1 : 0));
 			}, 1000);
 
-			// Clear the countdown interval after 10 seconds or when call ends
-			const callDuration = 10; // Define the duration of the call
+			// End call after 10 seconds
 			setTimeout(() => {
 				clearInterval(countdownInterval);
 				setIsCalling(false);
-				setCountdown(0); // Reset countdown when call ends
-			}, callDuration * 1000); // Call duration in milliseconds
-		}, 2000); // Wait for 2 seconds
+				setCountdown(0);
+			}, 10000);
+		}, 2000);
 
 		await answerCall(data.signal);
 	};
@@ -105,93 +135,136 @@ const Conversation = () => {
 		try {
 			setIsVideoCall(true);
 			setIsCalling(true);
+
+			// Request access to user's media devices (audio and video)
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: true,
-				video: { facingMode: "user" }, // Default to front camera
+				video: { facingMode: "user" }, // Front camera
 			});
-			localStreamRef.current = stream;
 
+			// Log the stream to check if it's returned successfully
+			console.log("Stream received:", stream);
+
+			// Ensure the stream is not null
+			if (!stream) {
+				console.error("Local stream is not available!");
+				return;
+			}
+
+			localStreamRef.current = stream; // Assign to localStreamRef
+
+			// Create a new peer connection and add tracks
 			peerRef.current = new RTCPeerConnection();
-
 			stream.getTracks().forEach(track => {
 				peerRef.current.addTrack(track, stream);
 			});
 
-			peerRef.current.onicecandidate = event => {
-				if (event.candidate) {
-					socket.emit("iceCandidate", { candidate: event.candidate });
-				}
-			};
-
+			// Create and send the offer to the other user
 			const offer = await peerRef.current.createOffer();
 			await peerRef.current.setLocalDescription(offer);
-			socket.emit("callUser", { signal: offer, receiver: selectedUser.id });
+
+			socket.emit("callUser", {
+				signal: offer,
+				receiver: selectedUser.id,
+				sender_id: currentUser.id,
+			});
 		} catch (error) {
-			console.error("Error starting video call:", error);
+			console.error("Error in startVideoCall:", error); // Log any errors
 		}
 	};
 
-	const answerCall = async signal => {
-		peerRef.current = new RTCPeerConnection();
 
-		if (localStreamRef.current) {
-			localStreamRef.current.getTracks().forEach(track => {
-				peerRef.current.addTrack(track, localStreamRef.current);
-			});
-		}
 
+const answerCall = async signal => {
+	console.log("🚀 ~ answerCall ~ signal:", signal); // Received offer signal
+
+	if (!localStreamRef.current) {
+		console.error("Local stream is not available!");
+		return; // Exit early if no local stream is available
+	}
+
+	// Initialize RTCPeerConnection with optional ICE servers
+	peerRef.current = new RTCPeerConnection({
+		iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+	});
+
+	// Add local tracks to the peer connection
+	localStreamRef.current.getTracks().forEach(track => {
+		peerRef.current.addTrack(track, localStreamRef.current);
+	});
+
+	try {
+		// Set remote description (offer)
 		await peerRef.current.setRemoteDescription(
 			new RTCSessionDescription(signal)
 		);
 
+		// Create and send an SDP answer
+		const answer = await peerRef.current.createAnswer();
+		await peerRef.current.setLocalDescription(answer);
+		socket.emit("answer", { sdp: peerRef.current.localDescription });
+
+		// Handle incoming remote stream
 		peerRef.current.ontrack = event => {
+			console.log("🚀 ~ answerCall ~ ontrack event:", event);
 			const remoteStream = event.streams[0];
 			remoteStreamRef.current = remoteStream;
-			// Set video element source to remote stream
+
 			const remoteVideoElement = document.getElementById("remote-video");
 			if (remoteVideoElement) {
 				remoteVideoElement.srcObject = remoteStream;
 			}
 		};
 
+		// Handle ICE candidates
 		peerRef.current.onicecandidate = event => {
 			if (event.candidate) {
 				socket.emit("iceCandidate", { candidate: event.candidate });
 			}
 		};
 
+		// Listen for ICE candidates from other peers
+		socket.on("iceCandidate", ({ candidate }) => {
+			peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+		});
+
+		// Update UI state indicating the call has started
 		setIsCalling(true);
-	};
+	} catch (error) {
+		console.error("Error during answerCall:", error);
+	}
+};
+
 
 	const endCall = () => {
-		setIsCalling(false);
-		setIsVideoCall(false);
-		setIsCameraOn(true); // Reset camera state
 		if (peerRef.current) {
-			peerRef.current.close();
+			peerRef.current.close(); // Close the peer connection
 		}
-		// if (localStreamRef.current) {
-		//   localStreamRef.current.getTracks().forEach((track) => track.stop());
-		// }
-		localStreamRef.current = null;
-		remoteStreamRef.current = null;
+
+		if (localStreamRef.current) {
+			localStreamRef.current.getTracks().forEach(track => track.stop()); // Stop all tracks
+			localStreamRef.current = null; // Clear the reference
+		}
+
+		setIsCalling(false); // Update the UI state
+		setIsVideoCall(false); // Update the UI state
 	};
 
 	const toggleMute = () => {
 		if (localStreamRef.current) {
-			// localStreamRef.current.getTracks().forEach((track) => {
-			//   track.enabled = !track.enabled; // Toggle audio track
-			// });
+			localStreamRef.current.getTracks().forEach(track => {
+				track.enabled = !track.enabled; // Toggle audio track
+			});
 			setIsMuted(prev => !prev);
 		}
 	};
 
 	const toggleCamera = () => {
-		// if (localStreamRef.current) {
-		//   // const videoTrack = localStreamRef.current.getVideoTracks()[0];
-		//   // videoTrack.enabled = !videoTrack.enabled; // Toggle video track
-		// }
-		setIsCameraOn(false);
+		if (localStreamRef.current) {
+			const videoTrack = localStreamRef.current.getVideoTracks()[0];
+			videoTrack.enabled = !videoTrack.enabled; // Toggle video track
+			setIsCameraOn(prev => !prev); // Correctly toggle camera state
+		}
 	};
 
 	const scrollToBottom = () => {
@@ -216,7 +289,7 @@ const Conversation = () => {
 						/>
 						<div>
 							<p className="font-semibold text-gray-700 text-lg">
-								{"Sevli" || "Unknown"}
+								{selectedUser.username ? selectedUser.username : "No Name"}
 							</p>
 							<p className="text-sm text-green-500">
 								{selectedUser?.isActive ? "Active" : "Inactive"}
@@ -241,7 +314,9 @@ const Conversation = () => {
 			{/* Call Screen */}
 			{isCalling && (
 				<div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-400 bg-opacity-80">
-					<h2 className="text-white text-2xl">In Call with Sevli</h2>
+					<h2 className="text-white text-2xl">
+						In Call with {selectedUser.username}
+					</h2>
 					{!showCountdown ? (
 						<p className="text-white text-lg animate-pulse">Calling...</p>
 					) : (
@@ -264,7 +339,7 @@ const Conversation = () => {
 							<button
 								onClick={toggleCamera}
 								className="p-3 text-white rounded-full bg-yellow-500 hover:bg-yellow-600">
-								{isCameraOn ? <FaCamera /> : <FaCameraSlash />}
+								{isCameraOn ? <FaCamera /> : <>camera</>}
 							</button>
 						)}
 					</div>
@@ -298,28 +373,31 @@ const Conversation = () => {
 				ref={chatContainerRef}>
 				{selectedUser && !isCalling ? (
 					messages.length ? (
-						messages.map((item, index) => (
+						messages?.map((item, index) => (
 							<div
-								key={item.id || index}
+								key={index} // Use a combination of sender_id and timestamp for a unique key
 								className={`flex items-start gap-3 ${
-									item?.senderId === currentUser?.id
+									item?.sender_id === currentUser?.id
 										? "justify-end"
 										: "justify-start"
 								}`}>
-								{item?.senderId !== currentUser?.id && (
+								{/* Profile picture for the other user */}
+								{item?.sender_id !== currentUser?.id && (
 									<img
-										src={`https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7mTO4XUWrP5O2BuCKOE8gC%2F475d756d589257be1d8495500447fcb6%2Fanne.jpg&w=767&q=100`}
+										src="https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7mTO4XUWrP5O2BuCKOE8gC%2F475d756d589257be1d8495500447fcb6%2Fanne.jpg&w=767&q=100"
 										alt="Profile"
 										className="w-8 h-8 rounded-full"
 									/>
 								)}
+
+								{/* Message bubble */}
 								<div
 									className={`p-3 rounded-lg ${
-										item?.senderId === currentUser?.id
+										item?.sender_id === currentUser?.id
 											? "bg-blue-500 text-white"
 											: "bg-gray-200"
 									}`}>
-									{item?.message}
+									{item?.content}
 								</div>
 							</div>
 						))
@@ -328,7 +406,7 @@ const Conversation = () => {
 					)
 				) : (
 					<div className="flex items-center h-full justify-center">
-						<div className="flex  flex-col  items-center space-x-1">
+						<div className="flex flex-col items-center space-x-1">
 							<Image
 								src="https://res.cloudinary.com/dh20zdtys/image/upload/v1723709261/49f87c8af2a00c070b11e2b15349fa1c_uakips.png"
 								width={150}

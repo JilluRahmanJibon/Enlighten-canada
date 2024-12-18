@@ -7,70 +7,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { getAllUsers } from "@/features/user/userSlice";
 
-// const members = [
-// 	{
-// 		name: "Patrick",
-// 		description:
-// 			"Looking for a partner to share my cooking skills and recipes...",
-// 		country: "Germany",
-// 		languages: ["DE", "EN"],
-// 		image:
-// 			"https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7I4r5LgUpRb9f4ZzcNCkbs%2Fee701fee9b1adbacc40eebc39f7eced4%2Fstefania.jpg&w=767&q=100",
-// 		status: "offline",
-// 	},
-// 	{
-// 		name: "Patrick",
-// 		description:
-// 			"Looking for a partner to share my cooking skills and recipes...",
-// 		country: "Germany",
-// 		languages: ["DE", "EN"],
-// 		image:
-// 			"https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7I4r5LgUpRb9f4ZzcNCkbs%2Fee701fee9b1adbacc40eebc39f7eced4%2Fstefania.jpg&w=767&q=100",
-// 		status: "offline",
-// 	},
-// 	{
-// 		name: "Patrick",
-// 		description:
-// 			"Looking for a partner to share my cooking skills and recipes...",
-// 		country: "Germany",
-// 		languages: ["DE", "EN"],
-// 		image:
-// 			"https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7I4r5LgUpRb9f4ZzcNCkbs%2Fee701fee9b1adbacc40eebc39f7eced4%2Fstefania.jpg&w=767&q=100",
-// 		status: "offline",
-// 	},
-// 	{
-// 		name: "Patrick",
-// 		description:
-// 			"Looking for a partner to share my cooking skills and recipes...",
-// 		country: "Germany",
-// 		languages: ["DE", "EN"],
-// 		image:
-// 			"https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7I4r5LgUpRb9f4ZzcNCkbs%2Fee701fee9b1adbacc40eebc39f7eced4%2Fstefania.jpg&w=767&q=100",
-// 		status: "offline",
-// 	},
-// 	{
-// 		name: "Patrick",
-// 		description:
-// 			"Looking for a partner to share my cooking skills and recipes...",
-// 		country: "Germany",
-// 		languages: ["DE", "EN"],
-// 		image:
-// 			"https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7I4r5LgUpRb9f4ZzcNCkbs%2Fee701fee9b1adbacc40eebc39f7eced4%2Fstefania.jpg&w=767&q=100",
-// 		status: "offline",
-// 	},
-// 	{
-// 		name: "Patrick",
-// 		description:
-// 			"Looking for a partner to share my cooking skills and recipes...",
-// 		country: "Germany",
-// 		languages: ["DE", "EN"],
-// 		image:
-// 			"https://tandem.net/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F0uov5tlk8deu%2F7I4r5LgUpRb9f4ZzcNCkbs%2Fee701fee9b1adbacc40eebc39f7eced4%2Fstefania.jpg&w=767&q=100",
-// 		status: "offline",
-// 	},
-// 	// Add more member data as needed
-// ];
-
 const MemberCard = () => {
 	const dispatch = useDispatch();
 	const { users, loading, error } = useSelector(state => state.user);
@@ -80,7 +16,7 @@ const MemberCard = () => {
 	}, [dispatch]);
 
 	if (loading) return <div>Loading...</div>;
-	if (error) return <div>Error: {error}</div>;
+	if (error) return <div>Error: {error?.message}</div>;
 
 	return (
 		<>
@@ -101,11 +37,9 @@ const MemberCard = () => {
 								<h3 className="font-semibold text-lg">{user?.username}</h3>
 							</div>
 							<p className="text-sm text-gray-600">
-								<span className="text-red-500">
-
-								{ user.email} 
-								</span>  One morning, when Gregor Samsa woke from troubled dreams, he
-								found himself crying
+								<span className="text-red-500">{user.email}</span> One morning,
+								when Gregor Samsa woke from troubled dreams, he found himself
+								crying
 							</p>
 							<div className="flex items-center space-x-2 mt-2 text-sm text-gray-500">
 								<div className="flex gap-2 items-center">

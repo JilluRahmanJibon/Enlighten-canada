@@ -1,14 +1,15 @@
+import { API_URL, SOCKET_API_URL } from '@/utils/BaseUrl';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import io from 'socket.io-client';
 
-// Base URL for the API
-const API_URL = 'http://localhost:8080/api'; // Modify as needed
-// Initialize Socket.IO client connection
-const socket = io("http://localhost:8080", {
+
+let socket = io(`${ SOCKET_API_URL }`, {
   path: "/api/socket.io",
   autoConnect: true,
-}); // Update with your server URL
+});
+
+// Update with your server URL
 // ========================== Chat Async Thunks ==========================
 
 // Fetch chat users list for a specific user
@@ -46,18 +47,52 @@ export const fetchConversationHistory = createAsyncThunk(
 );
 
 // Create a new message
+// export const createNewMessage = createAsyncThunk(
+//   'chat/createNewMessage',
+//   async (messageData, { rejectWithValue }) =>
+//   {
+//     try
+//     {
+//       const response = await axios.post(`${ API_URL }/chat/message`, messageData);
+//       socket.emit('sendMessage', messageData); // Emit message to Socket.io server
+//       return response.data;
+//     } catch (error)
+//     {
+//       return rejectWithValue(error.response.data);
+//     }
+//   }
+// )
+// 
+// ;
+
 export const createNewMessage = createAsyncThunk(
   'chat/createNewMessage',
   async (messageData, { rejectWithValue }) =>
   {
     try
     {
+      // Make the API request to save the message to the backend
       const response = await axios.post(`${ API_URL }/chat/message`, messageData);
-      socket.emit('sendMessage', messageData); // Emit message to Socket.io server
+
+      // Emit the message to the Socket.IO server for real-time updates
+      if (socket)
+      {
+        socket.emit('sendMessage', messageData, (acknowledgment) =>
+        {
+          // You can handle the acknowledgment here if necessary
+          console.log('Message sent acknowledgment:', acknowledgment);
+        });
+      } else
+      {
+        console.error('Socket connection is not available');
+      }
+
+      // Return the response data from the backend
       return response.data;
     } catch (error)
     {
-      return rejectWithValue(error.response.data);
+      console.error('Error sending message:', error);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );

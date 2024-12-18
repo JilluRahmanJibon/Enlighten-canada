@@ -1,4 +1,5 @@
 "use client";
+import { selectChatUser } from "@/features/user/chatSlice";
 import { getUserById } from "@/features/user/userSlice";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -6,7 +7,7 @@ import { CiMenuKebab } from "react-icons/ci";
 import { useDispatch, useSelector } from "react-redux";
 const ProfileDetails = ({ userId }) => {
 	const dispatch = useDispatch();
-	const { user, loading, error } = useSelector(state => state.user);
+	const { selectedUser, loading, error } = useSelector(state => state.user);
 
 	useEffect(() => {
 		if (userId) {
@@ -14,11 +15,14 @@ const ProfileDetails = ({ userId }) => {
 		}
 	}, [dispatch, userId]);
 
+	useEffect(() => {
+		if (selectedUser && !loading) {
+			dispatch(selectChatUser(selectedUser));
+		}
+	}, [dispatch, selectedUser, loading]);
+
 	// Handle loading and error states
 	if (loading) return <div>Loading...</div>;
-	if (error) return <div>Error: {error}</div>;
-	console.log("🚀 ~ ProfileDetails ~ user:", user);
-
 	return (
 		<div className="min-h-screen bg-amber-50/80">
 			{/* Header Section */}
@@ -38,7 +42,9 @@ const ProfileDetails = ({ userId }) => {
 						alt="Profile"
 						className="w-44 h-44 rounded-full border-4 border-white object-cover"
 					/>
-					<h1 className="mt-3 text-2xl font-semibold">淳民, 34</h1>
+					<h1 className="mt-3 text-2xl font-semibold">
+						{selectedUser?.username}
+					</h1>
 					<p className="text-gray-500">Active 9 minutes ago</p>
 					<div className="flex justify-center space-x-4 mt-4">
 						<button className="bg-primary text-white px-6 py-2 rounded-full">

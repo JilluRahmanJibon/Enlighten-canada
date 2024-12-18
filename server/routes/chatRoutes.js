@@ -9,6 +9,6 @@ router.get('/users/:userId', chatController.getChatUserList);
 router.post('/message', chatController.createMessage);
 
 // Route to get conversation history between two users
-router.get('/conversation/:userId1/:userId2', chatController.getConversationHistory);
+router.get('/conversation/:userId1/:userId2', chatController.getConversationHistory);   
 
 module.exports = router;

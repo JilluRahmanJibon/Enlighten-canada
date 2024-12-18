@@ -3,7 +3,7 @@ const { pool } = require("../db/db");
 // Get chat user list for a single user
 const getChatUserListForUser = async (userId) =>
 {
-   
+
   try
   {
     // Use pool.promise().query() to ensure it's using the promise-based interface
@@ -23,39 +23,80 @@ const getChatUserListForUser = async (userId) =>
   }
 };
 
-// Create a new message
-const createMessage = async (sender_id, receiver_id, message) =>
+const ensureConversation = async (conversation_id, user1_id, user2_id) =>
 {
   try
   {
-    const [ result ] = await pool.promise().query(
-      "INSERT INTO Messages (sender_id, receiver_id, message, timestamp) VALUES (?, ?, ?, NOW())",
-      [ sender_id, receiver_id, message ]
+    // Check if the conversation exists
+    const [ rows ] = await pool.promise().query(
+      "SELECT id FROM conversations WHERE id = ?",
+      [ conversation_id ]
     );
-    return result.insertId; // Return the ID of the newly inserted message
+
+    // If the conversation does not exist, create it
+    if (rows.length === 0)
+    {
+      await pool.promise().query(
+        "INSERT INTO conversations (id, user1_id, user2_id, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
+        [ conversation_id, user1_id, user2_id ]
+      );
+    }
   } catch (error)
   {
-    console.error("Error inserting message:", error); // Log the actual error
+    console.error("Error ensuring conversation:", error);
     throw error;
   }
 };
 
+
+
+// Create a new message
+const createMessage = async (sender_id, receiver_id, content, conversation_id) =>
+{
+  try
+  {
+    // Insert the message into the database
+    const [ result ] = await pool.promise().query(
+      "INSERT INTO messages (conversation_id, sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?, NOW())",
+      [ conversation_id, sender_id, receiver_id, content ]
+    );
+
+    // Return the ID of the newly inserted message
+    return result.insertId;
+  } catch (error)
+  {
+    console.error("Error inserting message:", error);
+    throw error;
+  }
+};
+
+
+ 
 // Get conversation history between two users
 const getConversationHistory = async (userId1, userId2) =>
 {
-  const [ rows ] = await pool.promise().query(
-    `SELECT * FROM Messages
-     WHERE (sender_id = ? AND receiver_id = ?)
-        OR (sender_id = ? AND receiver_id = ?)
-     ORDER BY timestamp ASC`,
-    [ userId1, userId2, userId2, userId1 ]
-  );
-  return rows;
+  console.log(userId1, userId2)
+  try
+  {
+
+    const [ rows ] = await pool.promise().query(
+      `SELECT * FROM Messages
+       WHERE (sender_id = ? AND receiver_id = ?)
+          OR (sender_id = ? AND receiver_id = ?)
+       ORDER BY created_at ASC`,
+      [ userId1, userId2, userId2, userId1 ]
+    );
+    return rows; // Return the conversation history
+  } catch (error)
+  {
+    console.error('Error fetching conversation history:', error);
+    throw error;
+  }
 };
 
+
 module.exports = {
-  getChatUserListForUser,
+  getChatUserListForUser, ensureConversation,
   createMessage,
   getConversationHistory,
 };
- 

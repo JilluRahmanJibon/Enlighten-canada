@@ -3,10 +3,12 @@ CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reset_token VARCHAR(255) DEFAULT NULL,
     reset_token_expiry DATETIME DEFAULT NULL
 );
+
 
 -- Blogs Table
 CREATE TABLE blogs (
@@ -25,19 +27,19 @@ CREATE TABLE blogs (
 );
 
 
--- Create Conversations Table
+-- Conversations Table
 CREATE TABLE conversations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id VARCHAR(255) PRIMARY KEY,
     user1_id INT NOT NULL,
     user2_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create Messages Table
+-- Messages Table
 CREATE TABLE messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    conversation_id INT NOT NULL,
+    conversation_id VARCHAR(255) NOT NULL,
     sender_id INT NOT NULL,
     receiver_id INT NOT NULL,
     content TEXT NOT NULL,
@@ -46,7 +48,3 @@ CREATE TABLE messages (
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-ALTER TABLE messages
-ADD COLUMN media VARCHAR(255) DEFAULT NULL;  -- Adjust the data type as needed, e.g., VARCHAR for URLs, BLOB for binary data.
-

@@ -3,7 +3,6 @@ const userService = require("../services/userService");
 const userController = {
   // Register a new user
   register: async (req, res, next) => {
-    console.log("🚀 ~ register: ~ req:", req)
     try {
       await userService.registerUser(req, res);
     } catch (error) {

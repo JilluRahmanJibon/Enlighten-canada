@@ -43,11 +43,13 @@ const Register = () =>
           router.push('/login');
         } else
         {
+
           toast.error(response.message);
         }
       })
       .catch((err) =>
       {
+        console.log(err)
         toast.error(err?.message);
       });
   };

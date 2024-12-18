@@ -57,7 +57,7 @@ const Sidebar = () => {
 						className="w-12 h-12 rounded-full shadow-lg mr-4 object-cover"
 					/>
 					<div className="flex-1">
-						<p className="text-lg font-medium text-gray-800">Sevli</p>
+						<p className="text-lg font-medium text-gray-800">{ item?.username}</p>
 						<span className="text-xs text-gray-500">Last seen 1 day ago</span>
 					</div>
 				</div>

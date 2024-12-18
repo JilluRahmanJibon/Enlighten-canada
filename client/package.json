@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.7",
+    "agora-react-uikit": "^1.2.0",
+    "agora-rtc-sdk-ng": "^4.22.2",
     "axios": "^1.7.7",
     "express": "^4.21.0",
     "framer-motion": "^11.3.28",

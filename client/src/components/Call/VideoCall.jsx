@@ -1,15 +1,21 @@
-"use clieht";
+"use client";
 import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import Peer from "simple-peer";
-const socket = io.connect("http://localhost:8080");
+import { SOCKET_API_URL } from "@/utils/BaseUrl";
 
+
+const socket = io.connect(`${SOCKET_API_URL}`);
 const VideoCall = () => {
   const [me, setMe] = useState("");
   const [stream, setStream] = useState();
+  console.log("🚀 ~ VideoCall ~ stream:", stream)
   const [receivingCall, setReceivingCall] = useState(false);
+  console.log("🚀 ~ VideoCall ~ receivingCall:", receivingCall)
   const [caller, setCaller] = useState("");
+  console.log("🚀 ~ VideoCall ~ caller:", caller)
   const [callerSignal, setCallerSignal] = useState();
+  console.log("🚀 ~ VideoCall ~ callerSignal:", callerSignal)
   const [callAccepted, setCallAccepted] = useState(false);
   const [idToCall, setIdToCall] = useState("");
   const [callEnded, setCallEnded] = useState(false);
@@ -30,12 +36,12 @@ const VideoCall = () => {
       setMe(id);
     });
 
-    socket.on("callUser", (data) => {
-      setReceivingCall(true);
-      setCaller(data.from);
-      setName(data.name);
-      setCallerSignal(data.signal);
-    });
+    socket.on("incomingCall", data => {
+			setReceivingCall(true);
+			setCaller(data.from);
+			setName(data.name);
+			setCallerSignal(data.signal);
+		});
   }, []);
 
   const callUser = (id) => {};
